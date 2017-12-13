@@ -6,6 +6,7 @@ import com.google.gson.JsonArray
 import com.sirolf2009.commonwealth.trading.orderbook.ILimitOrder
 import com.sirolf2009.commonwealth.trading.orderbook.LimitOrder
 import com.sirolf2009.commonwealth.trading.orderbook.Orderbook
+import java.util.Date
 import java.util.HashMap
 import java.util.Map
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -63,7 +64,7 @@ import org.eclipse.xtend.lib.annotations.ToString
 			val orders = orderbook.values.groupBy[amount > 0]
 			val asks = orders.get(false).map[immutable].toSet().toList()
 			val bids = orders.get(true).map[immutable].toSet().toList()
-			eventBus.post(new Orderbook(asks, bids))
+			eventBus.post(new Orderbook(new Date(), asks, bids))
 		}
 	}
 
