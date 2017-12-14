@@ -16,7 +16,7 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 			val data = array.get(1).getAsJsonArray()
 			(0 ..< data.size()).map[data.get(it).asJsonArray].forEach [ trade |
 				try {
-					val timestamp = trade.get(1).asLong
+					val timestamp = trade.get(1).asLong*1000l
 					val price = trade.get(2).asDouble
 					val amount = trade.get(3).asDouble
 					eventBus.post(new Trade(new Point(timestamp, price), amount))
@@ -26,7 +26,7 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 			]
 		} else if(array.get(1).asString.equals("te")) {
 			try {
-				val timestamp = array.get(3).asLong
+				val timestamp = array.get(3).asLong*1000l
 				val price = array.get(4).asDouble
 				val amount = array.get(5).asDouble
 				eventBus.post(new Trade(new Point(timestamp, price), amount))
