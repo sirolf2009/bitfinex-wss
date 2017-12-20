@@ -21,6 +21,7 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
+import com.sirolf2009.bitfinex.wss.handler.TickerHandler
 
 class BitfinexWebsocketClient extends WebSocketClient {
 	
@@ -70,14 +71,14 @@ class BitfinexWebsocketClient extends WebSocketClient {
 						} else if(object.get("channel").getAsString().equals("trades")) {
 							val response = gson.fromJson(message, SubscribeTradesResponse)
 							val channelEventBus = new EventBus()
-							channelEventBus.register(new TradesHandler(channelEventBus))
+							channelEventBus.register(new TradesHandler(channelEventBus, new EventBus()))
 							channels.put(response.chanId, channelEventBus)
 							channelEventBus.post(response)
 							eventBus.post(new OnSubscribed(response, channelEventBus))
 						} else if(object.get("channel").getAsString().equals("ticker")) {
 							val response = gson.fromJson(message, SubscribeTickerResponse)
 							val channelEventBus = new EventBus()
-							channelEventBus.register(new TradesHandler(channelEventBus))
+							channelEventBus.register(new TickerHandler(channelEventBus))
 							channels.put(response.chanId, channelEventBus)
 							channelEventBus.post(response)
 							eventBus.post(new OnSubscribed(response, channelEventBus))
