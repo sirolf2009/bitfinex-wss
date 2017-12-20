@@ -6,6 +6,6 @@ import org.eclipse.xtend.lib.annotations.Data
 	
 	val String event
 	val String channel
-	val String chanId
+	val Long chanId
 	
 }

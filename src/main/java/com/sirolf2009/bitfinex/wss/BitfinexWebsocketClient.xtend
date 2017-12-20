@@ -19,16 +19,18 @@ import java.util.HashMap
 import java.util.Map
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
+import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
+import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
 
 class BitfinexWebsocketClient extends WebSocketClient {
 	
 	val Gson gson
-	val Map<String, EventBus> channels
+	val Map<Long, EventBus> channels
 	val EventBus eventBus 
 	
 	new() {
 		super(createURI())
-		gson = new GsonBuilder().registerTypeAdapter(SubscribeOrderbookResponse, new SubscribeOrderbookResponseJsonDeserializer()).create()
+		gson = new GsonBuilder().registerTypeAdapter(SubscribeOrderbookResponse, new SubscribeOrderbookResponseJsonDeserializer()).registerTypeAdapter(SubscribeTickerResponse, new SubscribeTickerResponseJsonDeserializer()).create()
 		channels = new HashMap()
 		eventBus = new EventBus()
 	}
@@ -72,12 +74,19 @@ class BitfinexWebsocketClient extends WebSocketClient {
 							channels.put(response.chanId, channelEventBus)
 							channelEventBus.post(response)
 							eventBus.post(new OnSubscribed(response, channelEventBus))
+						} else if(object.get("channel").getAsString().equals("ticker")) {
+							val response = gson.fromJson(message, SubscribeTickerResponse)
+							val channelEventBus = new EventBus()
+							channelEventBus.register(new TradesHandler(channelEventBus))
+							channels.put(response.chanId, channelEventBus)
+							channelEventBus.post(response)
+							eventBus.post(new OnSubscribed(response, channelEventBus))
 						}
 					}
 				}
 			} else if(message.startsWith("[")) {
 				val array = gson.fromJson(message, JsonArray)
-				val channelID = array.get(0).getAsString()
+				val channelID = array.get(0).asLong
 				if(channels.containsKey(channelID)) {
 					channels.get(channelID).post(array)
 				}

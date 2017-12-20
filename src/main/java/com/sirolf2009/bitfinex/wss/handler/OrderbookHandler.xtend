@@ -4,7 +4,6 @@ import com.google.common.eventbus.EventBus
 import com.google.common.eventbus.Subscribe
 import com.google.gson.JsonArray
 import com.sirolf2009.commonwealth.trading.orderbook.ILimitOrder
-import com.sirolf2009.commonwealth.trading.orderbook.LimitOrder
 import com.sirolf2009.commonwealth.trading.orderbook.Orderbook
 import java.util.Date
 import java.util.HashMap
@@ -13,6 +12,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.annotations.EqualsHashCode
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import org.eclipse.xtend.lib.annotations.ToString
+import com.sirolf2009.bitfinex.wss.model.LimitOrder
 
 @FinalFieldsConstructor class OrderbookHandler {
 
@@ -20,11 +20,13 @@ import org.eclipse.xtend.lib.annotations.ToString
 	val Map<Double, MutableOrder> orderbook = new HashMap()
 
 	@Subscribe def void onData(JsonArray array) {
+		val channel = array.get(0).asLong
 		if(array.get(1).jsonArray) {
 			val data = array.get(1).getAsJsonArray()
 			(0 ..< data.size()).map[data.get(it).asJsonArray].map [ order |
 				try {
 					new MutableOrder() => [
+						channelID = channel
 						price = order.get(0).asDouble
 						count = order.get(1).asInt
 						amount = order.get(2).asDouble
@@ -49,6 +51,7 @@ import org.eclipse.xtend.lib.annotations.ToString
 					order.amount = amount
 				} else {
 					orderbook.put(price, new MutableOrder() => [
+						channelID = channel
 						it.price = price
 						it.count = count
 						it.amount = amount
@@ -69,12 +72,13 @@ import org.eclipse.xtend.lib.annotations.ToString
 	}
 
 	@EqualsHashCode @ToString @Accessors static class MutableOrder {
+		var long channelID
 		var double price
 		var int count
 		var double amount
 
 		def immutable() {
-			new LimitOrder(price, Math.abs(amount)) as ILimitOrder
+			new LimitOrder(channelID, price, count, Math.abs(amount)) as ILimitOrder
 		}
 	}
 

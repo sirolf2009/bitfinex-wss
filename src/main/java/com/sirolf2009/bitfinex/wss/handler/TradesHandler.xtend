@@ -12,6 +12,7 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 	val EventBus eventBus
 	
 	@Subscribe def void onData(JsonArray array) {
+		println(array)
 		if(array.get(1).jsonArray) {
 			val data = array.get(1).getAsJsonArray()
 			(0 ..< data.size()).map[data.get(it).asJsonArray].forEach [ trade |
