@@ -6,6 +6,6 @@ import com.sirolf2009.util.GSonDTO
 @Data @GSonDTO class Info {
 	
 	val String event = "info"
-	val double version
+	val short version
 	
 }

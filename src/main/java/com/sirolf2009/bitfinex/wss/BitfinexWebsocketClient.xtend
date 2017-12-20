@@ -8,10 +8,13 @@ import com.google.gson.JsonObject
 import com.sirolf2009.bitfinex.wss.event.OnDisconnected
 import com.sirolf2009.bitfinex.wss.event.OnSubscribed
 import com.sirolf2009.bitfinex.wss.handler.OrderbookHandler
+import com.sirolf2009.bitfinex.wss.handler.TickerHandler
 import com.sirolf2009.bitfinex.wss.handler.TradesHandler
 import com.sirolf2009.bitfinex.wss.model.Info
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponseJsonDeserializer
+import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
+import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
 import com.sirolf2009.bitfinex.wss.model.SubscribeTrades
 import com.sirolf2009.bitfinex.wss.model.SubscribeTradesResponse
 import java.net.URI
@@ -19,9 +22,6 @@ import java.util.HashMap
 import java.util.Map
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
-import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
-import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
-import com.sirolf2009.bitfinex.wss.handler.TickerHandler
 
 class BitfinexWebsocketClient extends WebSocketClient {
 	
