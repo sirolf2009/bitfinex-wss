@@ -56,7 +56,6 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	}
 	
 	override onMessage(String message) {
-		println(message)
 		try {
 			if(message.startsWith("{")) {
 				val object = gson.fromJson(message, JsonObject)
