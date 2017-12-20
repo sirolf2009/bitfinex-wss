@@ -5,17 +5,20 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.sirolf2009.bitfinex.wss.event.OnAuthenticated
 import com.sirolf2009.bitfinex.wss.event.OnDisconnected
 import com.sirolf2009.bitfinex.wss.event.OnSubscribed
+import com.sirolf2009.bitfinex.wss.handler.AuthenticatedHandler
 import com.sirolf2009.bitfinex.wss.handler.OrderbookHandler
 import com.sirolf2009.bitfinex.wss.handler.TickerHandler
 import com.sirolf2009.bitfinex.wss.handler.TradesHandler
+import com.sirolf2009.bitfinex.wss.model.AuthenticateFailure
+import com.sirolf2009.bitfinex.wss.model.AuthenticateSuccess
 import com.sirolf2009.bitfinex.wss.model.Info
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponseJsonDeserializer
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
-import com.sirolf2009.bitfinex.wss.model.SubscribeTrades
 import com.sirolf2009.bitfinex.wss.model.SubscribeTradesResponse
 import java.net.URI
 import java.util.HashMap
@@ -53,6 +56,7 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	}
 	
 	override onMessage(String message) {
+		println(message)
 		try {
 			if(message.startsWith("{")) {
 				val object = gson.fromJson(message, JsonObject)
@@ -83,6 +87,17 @@ class BitfinexWebsocketClient extends WebSocketClient {
 							channelEventBus.post(response)
 							eventBus.post(new OnSubscribed(response, channelEventBus))
 						}
+					} else if(event.equals("auth")) {
+						if(object.get("status").getAsString().equals("OK")) {
+							val response = gson.fromJson(message, AuthenticateSuccess)
+							val channelEventBus = new EventBus()
+							channelEventBus.register(new AuthenticatedHandler(channelEventBus))
+							channels.put(response.chanId, channelEventBus)
+							channelEventBus.post(response)
+							eventBus.post(new OnAuthenticated(response, channelEventBus))
+						} else {
+							eventBus.post(gson.fromJson(message, AuthenticateFailure))
+						}
 					}
 				}
 			} else if(message.startsWith("[")) {
@@ -103,15 +118,6 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	
 	def static createURI() {
 		return new URI("wss://api.bitfinex.com/ws")
-	}
-	
-	def static void main(String[] args) {
-		new BitfinexWebsocketClient() => [
-			println("Connecting...")
-			connectBlocking()
-			println("Connected...")
-			send(new SubscribeTrades("BTCUSD"))
-		]
 	}
 	
 }
