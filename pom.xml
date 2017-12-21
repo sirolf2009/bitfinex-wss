@@ -4,7 +4,7 @@
 	<groupId>com.sirolf2009</groupId>
 	<artifactId>bitfinex-wss</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>xtend-quickstart</name>
+	<name>Bitfinex WSS</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<xtend.version>2.12.0</xtend.version>
