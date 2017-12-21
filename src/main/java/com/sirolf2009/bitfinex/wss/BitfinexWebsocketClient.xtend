@@ -102,7 +102,8 @@ class BitfinexWebsocketClient extends WebSocketClient {
 			} else if(message.startsWith("[")) {
 				val array = gson.fromJson(message, JsonArray)
 				val channelID = array.get(0).asLong
-				if(channels.containsKey(channelID)) {
+				if(array.size() == 2 && array.get(2).toString.equals("\"hb\"")) {
+				} else if(channels.containsKey(channelID)) {
 					channels.get(channelID).post(array)
 				}
 			}
