@@ -15,10 +15,12 @@ import com.sirolf2009.bitfinex.wss.handler.TradesHandler
 import com.sirolf2009.bitfinex.wss.model.AuthenticateFailure
 import com.sirolf2009.bitfinex.wss.model.AuthenticateSuccess
 import com.sirolf2009.bitfinex.wss.model.Info
+import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbook
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponseJsonDeserializer
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
+import com.sirolf2009.bitfinex.wss.model.SubscribeTrades
 import com.sirolf2009.bitfinex.wss.model.SubscribeTradesResponse
 import java.net.URI
 import java.util.HashMap
@@ -102,7 +104,7 @@ class BitfinexWebsocketClient extends WebSocketClient {
 			} else if(message.startsWith("[")) {
 				val array = gson.fromJson(message, JsonArray)
 				val channelID = array.get(0).asLong
-				if(array.size() == 2 && array.get(2).toString.equals("\"hb\"")) {
+				if(array.size() == 2 && array.get(1).toString.equals("\"hb\"")) {
 				} else if(channels.containsKey(channelID)) {
 					channels.get(channelID).post(array)
 				}
@@ -118,6 +120,14 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	
 	def static createURI() {
 		return new URI("wss://api.bitfinex.com/ws")
+	}
+	
+	def static void main(String[] args) {
+		new BitfinexWebsocketClient() => [
+			connectBlocking()
+			send(new SubscribeOrderbook("BTCUSD", SubscribeOrderbook.PREC_PRECISE, SubscribeOrderbook.FREQ_REALTIME))
+			send(new SubscribeTrades("BTCUSD"))
+		]
 	}
 	
 }
