@@ -1,7 +1,8 @@
 package com.sirolf2009.bitfinex.wss.model
 
-import org.eclipse.xtend.lib.annotations.Data
 import com.sirolf2009.commonwealth.timeseries.ICandlestick
+import java.util.Date
+import org.eclipse.xtend.lib.annotations.Data
 
 @Data class Ticker implements ICandlestick {
 	
@@ -31,6 +32,10 @@ import com.sirolf2009.commonwealth.timeseries.ICandlestick
 	
 	override getLow() {
 		return low
+	}
+	
+	override getTimestamp() {
+		return new Date()
 	}
 	
 }

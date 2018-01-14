@@ -15,7 +15,6 @@ import com.sirolf2009.bitfinex.wss.handler.TradesHandler
 import com.sirolf2009.bitfinex.wss.model.AuthenticateFailure
 import com.sirolf2009.bitfinex.wss.model.AuthenticateSuccess
 import com.sirolf2009.bitfinex.wss.model.Info
-import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbook
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponseJsonDeserializer
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
@@ -119,13 +118,13 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	}
 	
 	def static createURI() {
-		return new URI("wss://api.bitfinex.com/ws")
+		return new URI("wss://api.bitfinex.com/ws/2")
 	}
 	
 	def static void main(String[] args) {
 		new BitfinexWebsocketClient() => [
 			connectBlocking()
-			send(new SubscribeOrderbook("BTCUSD", SubscribeOrderbook.PREC_PRECISE, SubscribeOrderbook.FREQ_REALTIME))
+//			send(new SubscribeOrderbook("BTCUSD", SubscribeOrderbook.PREC_PRECISE, SubscribeOrderbook.FREQ_REALTIME))
 			send(new SubscribeTrades("BTCUSD"))
 		]
 	}
