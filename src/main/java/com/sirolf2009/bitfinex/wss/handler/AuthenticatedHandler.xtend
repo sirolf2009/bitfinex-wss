@@ -12,10 +12,10 @@ import com.sirolf2009.bitfinex.wss.model.UserOrderType
 import com.sirolf2009.bitfinex.wss.model.UserTrade
 import com.sirolf2009.bitfinex.wss.model.Wallet
 import com.sirolf2009.bitfinex.wss.model.WalletType
-import com.sirolf2009.util.TimeUtil
-import java.util.Optional
-import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 import java.util.Date
+import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import com.google.gson.JsonElement
+import java.util.Optional
 
 @FinalFieldsConstructor class AuthenticatedHandler {
 
@@ -25,16 +25,12 @@ import java.util.Date
 		val channel = array.get(0).asLong
 		val type = array.get(1).asString
 		if(type.equals("ps")) {
-			val positions = array.get(2).asJsonArray
-			positions.map[asJsonArray].forEach [
-				val pair = get(0).asString
-				val status = positionStatuses.get(get(1).asString)
-				val amount = get(2).asFloat
-				val basePrice = get(3).asFloat
-				val marginFunding = get(4).asFloat
-				val marginFundingType = if(get(5).asInt == 0) FundingType.DAILY else FundingType.TERM
-				eventBus.post(new Position(channel, pair, status, amount, basePrice, marginFunding, marginFundingType))
+			array.snapshots.map[parsePosition(channel)].forEach [
+				eventBus.post(it)
 			]
+		} else if(type.equals("pu")) {
+			val it = array.get(2).asJsonArray
+			eventBus.post(parsePosition(channel))
 		} else if(type.equals("ws")) {
 			val wallets = array.get(2).asJsonArray
 			wallets.map[asJsonArray].forEach [
@@ -44,67 +40,118 @@ import java.util.Date
 				eventBus.post(new Wallet(walletType, symbol, amount))
 			]
 		} else if(type.equals("os")) {
-			val orders = array.get(2).asJsonArray
-			orders.map[asJsonArray].forEach [
-				val orderID = get(0).asLong
-				val pair = get(1).asString
-				val amount = get(2).asFloat
-				val originalAmount = get(3).asFloat
-				val orderType = orderTypes.get(get(4).asString)
-				val orderStatus = orderStatuses.get(get(5).asString.split(" ").get(0))
-				val price = get(6).asFloat
-				val avgPrice = get(7).asFloat
-				val timestamp = TimeUtil.parseISO(get(8).asString)
-				val notify = get(9).asInt == 1
-				val hidden = get(10).asInt == 1
-				val oco = if(get(11).asInt == 0) Optional.empty else Optional.of(get(11).asInt)
-				eventBus.post(new UserOrder(channel, orderID, pair, amount, originalAmount, orderType, orderStatus, price, avgPrice, timestamp, notify, hidden, oco))
+			array.snapshots.map[parseOrder(channel)].forEach [
+				eventBus.post(it)
 			]
-		} else if(type.equals("oc")) {
-			array.get(2).asJsonArray => [
-				val orderID = get(0).asLong
-				val pair = get(1).asString
-				val amount = get(2).asFloat
-				val originalAmount = get(3).asFloat
-				val orderType = orderTypes.get(get(4).asString)
-				val orderStatus = orderStatuses.get(get(5).asString.split(" ").get(0))
-				val price = get(6).asFloat
-				val avgPrice = get(7).asFloat
-				val timestamp = TimeUtil.parseISO(get(8).asString)
-				val notify = get(9).asInt == 1
-				val hidden = get(10).asInt == 1
-				val oco = if(get(11).asInt == 0) Optional.empty else Optional.of(get(11).asInt)
-				eventBus.post(new UserOrder(channel, orderID, pair, amount, originalAmount, orderType, orderStatus, price, avgPrice, timestamp, notify, hidden, oco))
-			]
+		} else if(type.equals("on") || type.equals("ou") || type.equals("oc")) {
+			val it = array.get(2).asJsonArray
+			eventBus.post(parseOrder(channel))
 		} else if(type.equals("ts")) {
-			val trades = array.get(2).asJsonArray
-			trades.map[asJsonArray].forEach [
-				val tradeID = get(0).asString
-				val pair = get(1).asString
-				val timestamp = TimeUtil.parseISO(get(2).asString)
-				val orderID = get(3).asInt
-				val amount = get(4).asFloat
-				val price = get(5).asFloat
-				val orderType = orderTypes.get(get(6).asString)
-				val orderPrice = get(7).asFloat
-				val fee = get(8).asFloat
-				val feeCurrency = get(9).asString
-				eventBus.post(new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency))
+			array.snapshots.map[parseTrade(channel)].forEach [
+				eventBus.post(it)
 			]
 		} else if(type.equals("tu")) {
-			array.get(2).asJsonArray => [
-				val tradeID = get(1).asString
-				val pair = get(2).asString
-				val timestamp = new Date(get(3).asLong * 1000)
-				val orderID = get(4).asInt
-				val amount = get(5).asFloat
-				val price = get(6).asFloat
-				val orderType = orderTypes.get(get(7).asString)
-				val orderPrice = get(8).asFloat
-				val fee = get(9).asFloat
-				val feeCurrency = get(10).asString
-				eventBus.post(new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency))
-			]
+			val it = array.get(2).asJsonArray
+			eventBus.post(parseTrade(channel))
+		} else if(type.equals("te")) {
+//			val it = array.get(2).asJsonArray
+//			eventBus.post(parseTradeExecution(channel))
+		}
+	}
+
+	def parsePosition(JsonArray it, long channel) {
+		val pair = get(0).asString
+		val status = positionStatuses.get(get(1).asString)
+		val amount = get(2).asFloat
+		val basePrice = get(3).asFloat
+		val marginFunding = get(4).asFloat
+		val marginFundingType = if(get(5).asInt == 0) FundingType.DAILY else FundingType.TERM
+		return new Position(channel, pair, status, amount, basePrice, marginFunding, marginFundingType)
+	}
+
+	def parseOrder(JsonArray it, long channel) {
+		val orderID = get(0).asInt
+		val groupID = get(1).asOptInt
+		val clientID = get(2).asOptInt
+		val pair = get(3).asString
+		val created = new Date(get(4).asLong)
+		val updated = new Date(get(5).asLong)
+		val amount = get(6).asFloat
+		val originalAmount = get(7).asFloat
+		val orderType = orderTypes.get(get(8).asString)
+		val prevOrderType = get(9).asOptString.map[orderTypes.get(it)]
+		//10 reserved
+		//11 reserved
+		val flags = get(12).asInt
+		val orderStatus = orderStatuses.get(get(13).asString.split(" ").get(0))
+		//14 reserved
+		//15 reserved
+		val price = get(16).asFloat
+		val priceAvg = get(17).asFloat
+		val priceTrailing = get(18).asOptFloat
+		val priceAuxLimit = get(19).asOptFloat
+		//20 reserved
+		//21 reserved
+		//22 reserved
+		val notify = get(23).asInt == 1
+		val hidden = get(24).asInt == 1
+		val placedID = get(25).asInt
+		return new UserOrder(orderID, groupID, clientID, pair, created, updated, amount, originalAmount, orderType, prevOrderType, flags, orderStatus, price, priceAvg, priceTrailing, priceAuxLimit, notify, hidden, placedID)
+	}
+	
+	def parseTrade(JsonArray it, long channel) {
+		val tradeID = get(0).asString
+		val pair = get(1).asString
+		val timestamp = new Date(get(2).asLong)
+		val orderID = get(3).asInt
+		val amount = get(4).asFloat
+		val price = get(5).asFloat
+		val orderType = orderTypes.get(get(6).asString)
+		val orderPrice = get(7).asFloat
+		val fee = get(9).asFloat
+		val feeCurrency = get(10).asString
+		new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency)
+	}
+	
+	def parseTradeExecution(JsonArray it, long channel) {
+		val tradeID = get(0).asString
+		val pair = get(1).asString
+		val timestamp = new Date(get(2).asLong)
+		val orderID = get(3).asInt
+		val amount = get(4).asFloat
+		val price = get(5).asFloat
+		val orderType = orderTypes.get(get(6).asString)
+		val orderPrice = get(7).asFloat
+		val fee = 0
+		val feeCurrency = "USD"
+		new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency)
+	}
+
+	def getSnapshots(JsonArray array) {
+		array.get(2).asJsonArray.map[asJsonArray]
+	}
+	
+	def getAsOptInt(JsonElement it) {
+		if(jsonNull) {
+			return Optional.empty()
+		} else {
+			return Optional.of(asInt)
+		}
+	}
+	
+	def getAsOptString(JsonElement it) {
+		if(jsonNull) {
+			return Optional.empty()
+		} else {
+			return Optional.of(asString)
+		}
+	}
+	
+	def getAsOptFloat(JsonElement it) {
+		if(jsonNull) {
+			return Optional.empty()
+		} else {
+			return Optional.of(asFloat)
 		}
 	}
 
