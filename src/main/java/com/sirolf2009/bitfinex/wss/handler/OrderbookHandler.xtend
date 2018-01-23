@@ -21,8 +21,8 @@ import com.sirolf2009.bitfinex.wss.model.LimitOrder
 
 	@Subscribe def void onData(JsonArray array) {
 		val channel = array.get(0).asLong
-		if(array.get(1).jsonArray) {
-			val data = array.get(1).getAsJsonArray()
+		val data = array.get(1).asJsonArray
+		if(data.get(1).jsonArray) {
 			(0 ..< data.size()).map[data.get(it).asJsonArray].map [ order |
 				try {
 					new MutableOrder() => [
@@ -38,10 +38,10 @@ import com.sirolf2009.bitfinex.wss.model.LimitOrder
 				orderbook.put(price, it)
 			]
 			postOrderbook()
-		} else if(array.size() == 4) {
-			val price = array.get(1).asDouble
-			val count = array.get(2).asInt
-			val amount = array.get(3).asDouble
+		} else {
+			val price = data.get(0).asDouble
+			val count = data.get(1).asInt
+			val amount = data.get(2).asDouble
 			synchronized(orderbook) {
 				if(count == 0) {
 					orderbook.remove(price)
