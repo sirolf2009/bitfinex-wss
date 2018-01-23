@@ -15,12 +15,10 @@ import com.sirolf2009.bitfinex.wss.handler.TradesHandler
 import com.sirolf2009.bitfinex.wss.model.AuthenticateFailure
 import com.sirolf2009.bitfinex.wss.model.AuthenticateSuccess
 import com.sirolf2009.bitfinex.wss.model.Info
-import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbook
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeOrderbookResponseJsonDeserializer
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponse
 import com.sirolf2009.bitfinex.wss.model.SubscribeTickerResponseJsonDeserializer
-import com.sirolf2009.bitfinex.wss.model.SubscribeTrades
 import com.sirolf2009.bitfinex.wss.model.SubscribeTradesResponse
 import java.net.URI
 import java.util.HashMap
@@ -29,34 +27,34 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 
 class BitfinexWebsocketClient extends WebSocketClient {
-	
+
 	val Gson gson
 	val Map<Long, EventBus> channels
-	val EventBus eventBus 
-	
+	val EventBus eventBus
+
 	new() {
 		super(createURI())
 		gson = new GsonBuilder().registerTypeAdapter(SubscribeOrderbookResponse, new SubscribeOrderbookResponseJsonDeserializer()).registerTypeAdapter(SubscribeTickerResponse, new SubscribeTickerResponseJsonDeserializer()).create()
 		channels = new HashMap()
 		eventBus = new EventBus()
 	}
-	
+
 	def send(Object object) {
 		send(gson.toJson(object))
 	}
-	
+
 	def getEventBus() {
 		return eventBus
 	}
-	
+
 	override onClose(int code, String reason, boolean remote) {
 		eventBus.post(new OnDisconnected(code, reason, remote))
 	}
-	
+
 	override onError(Exception ex) {
 		eventBus.post(ex)
 	}
-	
+
 	override onMessage(String message) {
 		try {
 			if(message.startsWith("{")) {
@@ -107,27 +105,27 @@ class BitfinexWebsocketClient extends WebSocketClient {
 				if(array.size() == 2 && array.get(1).toString.equals("\"hb\"")) {
 				} else if(channels.containsKey(channelID)) {
 					channels.get(channelID).post(array)
+				} else if(channelID.equals(0)) {
+					throw new RuntimeException("strange")
 				}
 			}
 		} catch(Exception e) {
 			e.printStackTrace()
 		}
 	}
-	
+
 	override onOpen(ServerHandshake handshakedata) {
 		eventBus.post(handshakedata)
 	}
-	
+
 	def static createURI() {
 		return new URI("wss://api.bitfinex.com/ws")
 	}
-	
+
 	def static void main(String[] args) {
 		new BitfinexWebsocketClient() => [
 			connectBlocking()
-			send(new SubscribeOrderbook("BTCUSD", SubscribeOrderbook.PREC_PRECISE, SubscribeOrderbook.FREQ_REALTIME))
-			send(new SubscribeTrades("BTCUSD"))
 		]
 	}
-	
+
 }

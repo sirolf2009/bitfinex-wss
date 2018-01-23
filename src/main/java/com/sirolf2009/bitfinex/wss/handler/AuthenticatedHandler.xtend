@@ -15,17 +15,18 @@ import com.sirolf2009.bitfinex.wss.model.WalletType
 import com.sirolf2009.util.TimeUtil
 import java.util.Optional
 import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
+import java.util.Date
 
 @FinalFieldsConstructor class AuthenticatedHandler {
-	
+
 	val EventBus eventBus
-	
+
 	@Subscribe def void onData(JsonArray array) {
 		val channel = array.get(0).asLong
 		val type = array.get(1).asString
 		if(type.equals("ps")) {
 			val positions = array.get(2).asJsonArray
-			positions.map[asJsonArray].forEach[
+			positions.map[asJsonArray].forEach [
 				val pair = get(0).asString
 				val status = positionStatuses.get(get(1).asString)
 				val amount = get(2).asFloat
@@ -36,7 +37,7 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 			]
 		} else if(type.equals("ws")) {
 			val wallets = array.get(2).asJsonArray
-			wallets.map[asJsonArray].forEach[
+			wallets.map[asJsonArray].forEach [
 				val walletType = walletTypes.get(get(0).asString)
 				val symbol = get(1).asString
 				val amount = get(2).asFloat
@@ -44,13 +45,29 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 			]
 		} else if(type.equals("os")) {
 			val orders = array.get(2).asJsonArray
-			orders.map[asJsonArray].forEach[
+			orders.map[asJsonArray].forEach [
 				val orderID = get(0).asLong
 				val pair = get(1).asString
 				val amount = get(2).asFloat
 				val originalAmount = get(3).asFloat
 				val orderType = orderTypes.get(get(4).asString)
-				val orderStatus = orderStatuses.get(get(5).asString)
+				val orderStatus = orderStatuses.get(get(5).asString.split(" ").get(0))
+				val price = get(6).asFloat
+				val avgPrice = get(7).asFloat
+				val timestamp = TimeUtil.parseISO(get(8).asString)
+				val notify = get(9).asInt == 1
+				val hidden = get(10).asInt == 1
+				val oco = if(get(11).asInt == 0) Optional.empty else Optional.of(get(11).asInt)
+				eventBus.post(new UserOrder(channel, orderID, pair, amount, originalAmount, orderType, orderStatus, price, avgPrice, timestamp, notify, hidden, oco))
+			]
+		} else if(type.equals("oc")) {
+			array.get(2).asJsonArray => [
+				val orderID = get(0).asLong
+				val pair = get(1).asString
+				val amount = get(2).asFloat
+				val originalAmount = get(3).asFloat
+				val orderType = orderTypes.get(get(4).asString)
+				val orderStatus = orderStatuses.get(get(5).asString.split(" ").get(0))
 				val price = get(6).asFloat
 				val avgPrice = get(7).asFloat
 				val timestamp = TimeUtil.parseISO(get(8).asString)
@@ -61,8 +78,8 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 			]
 		} else if(type.equals("ts")) {
 			val trades = array.get(2).asJsonArray
-			trades.map[asJsonArray].forEach[
-				val tradeID = get(0).asInt
+			trades.map[asJsonArray].forEach [
+				val tradeID = get(0).asString
 				val pair = get(1).asString
 				val timestamp = TimeUtil.parseISO(get(2).asString)
 				val orderID = get(3).asInt
@@ -74,20 +91,34 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 				val feeCurrency = get(9).asString
 				eventBus.post(new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency))
 			]
+		} else if(type.equals("tu")) {
+			array.get(2).asJsonArray => [
+				val tradeID = get(1).asString
+				val pair = get(2).asString
+				val timestamp = new Date(get(3).asLong * 1000)
+				val orderID = get(4).asInt
+				val amount = get(5).asFloat
+				val price = get(6).asFloat
+				val orderType = orderTypes.get(get(7).asString)
+				val orderPrice = get(8).asFloat
+				val fee = get(9).asFloat
+				val feeCurrency = get(10).asString
+				eventBus.post(new UserTrade(channel, tradeID, pair, timestamp, orderID, amount, price, orderType, orderPrice, fee, feeCurrency))
+			]
 		}
 	}
-	
+
 	static val positionStatuses = #{
 		"ACTIVE" -> PositionStatus.ACTIVE,
 		"CLOSED" -> PositionStatus.CLOSED
 	}
-	
+
 	static val walletTypes = #{
 		"exchange" -> WalletType.EXCHANGE,
 		"trading" -> WalletType.TRADING,
 		"deposit" -> WalletType.DEPOSIT
 	}
-	
+
 	static val orderTypes = #{
 		"LIMIT" -> UserOrderType.LIMIT,
 		"MARKET" -> UserOrderType.MARKET,
@@ -100,12 +131,12 @@ import org.eclipse.xtend.lib.annotations.FinalFieldsConstructor
 		"FOK" -> UserOrderType.FOK,
 		"EXCHANGE FOK" -> UserOrderType.EXCHANGE_FOK
 	}
-	
+
 	static val orderStatuses = #{
 		"ACTIVE" -> UserOrderStatus.ACTIVE,
 		"EXECUTED" -> UserOrderStatus.EXECUTED,
 		"PARTIALLY FILLED" -> UserOrderStatus.PARTIALLY_FILLED,
 		"CANCELED" -> UserOrderStatus.CANCELLED
 	}
-	
+
 }

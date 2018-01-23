@@ -6,7 +6,7 @@ import org.eclipse.xtend.lib.annotations.Data
 @Data class UserTrade {
 	
 	val long channelID
-	val int tradeID
+	val String tradeID
 	val String pair
 	val Date timestamp
 	val int orderID
