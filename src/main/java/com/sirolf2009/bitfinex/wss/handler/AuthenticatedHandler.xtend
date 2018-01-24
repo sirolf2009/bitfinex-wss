@@ -31,6 +31,9 @@ import java.util.Optional
 		} else if(type.equals("pu")) {
 			val it = array.get(2).asJsonArray
 			eventBus.post(parsePosition(channel))
+		} else if(type.equals("pc")) {
+			val it = array.get(2).asJsonArray
+			eventBus.post(parsePosition(channel))
 		} else if(type.equals("ws")) {
 			val wallets = array.get(2).asJsonArray
 			wallets.map[asJsonArray].forEach [
