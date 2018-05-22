@@ -63,12 +63,27 @@ import java.util.Optional
 	}
 
 	def parsePosition(JsonArray it, long channel) {
+		/*
+		 * [0,"pu",["tBTCUSD","ACTIVE",0.006,8251,0,null,null,null,null,null]]
+		 * [0,"pu",[
+		 * 	0 POS_PAIR: "tBTCUSD"
+		 *  1 POS_STATUS: "ACTIVE"
+		 *  2 POS_AMOUNT: 0.006
+		 *  3 POS_BASE_PRICE: 8251
+		 *  4 POS_MARGIN_FUNDING: 0
+		 *  5 POS_MARGIN_FUNDING_TYPE null
+		 *  6 PL null
+		 *  7 PL_PERC null
+		 *  8 PRICE_LIQ null
+		 *  9 LEVERAGE null
+		 * ]]
+		 */
 		val pair = get(0).asString
 		val status = positionStatuses.get(get(1).asString)
 		val amount = get(2).asFloat
 		val basePrice = get(3).asFloat
 		val marginFunding = get(4).asFloat
-		val marginFundingType = if(get(5).asInt == 0) FundingType.DAILY else FundingType.TERM
+		val marginFundingType = if(get(5).isJsonNull() || get(5).asInt == 0) FundingType.DAILY else FundingType.TERM
 		return new Position(channel, pair, status, amount, basePrice, marginFunding, marginFundingType)
 	}
 
