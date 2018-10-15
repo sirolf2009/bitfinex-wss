@@ -17,6 +17,7 @@ import org.junit.Test
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import com.sirolf2009.bitfinex.wss.model.UserOrderStatus
+import java.util.Optional
 
 class AuthenticatedHandlerTest {
 
@@ -77,7 +78,7 @@ class AuthenticatedHandlerTest {
 			assertFalse(priceAuxLimit.present)
 			assertFalse(isNotify())
 			assertFalse(hidden)
-			assertEquals(0, placedID)
+			assertEquals(Optional.of(0), placedID)
 		]
 	}
 
@@ -101,7 +102,7 @@ class AuthenticatedHandlerTest {
 			assertFalse(priceAuxLimit.present)
 			assertFalse(isNotify())
 			assertFalse(hidden)
-			assertEquals(0, placedID)
+			assertEquals(Optional.of(0), placedID)
 		]
 	}
 
@@ -125,7 +126,7 @@ class AuthenticatedHandlerTest {
 			assertFalse(priceAuxLimit.present)
 			assertFalse(isNotify())
 			assertFalse(hidden)
-			assertEquals(0, placedID)
+			assertEquals(Optional.of(0), placedID)
 		]
 	}
 
