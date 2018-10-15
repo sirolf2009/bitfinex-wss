@@ -24,6 +24,6 @@ import org.eclipse.xtend.lib.annotations.Data
 	val Optional<Float> priceAuxLimit
 	val boolean notify
 	val boolean hidden
-	val int placedID
+	val Optional<Integer> placedID
 
 }

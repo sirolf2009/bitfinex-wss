@@ -35,4 +35,10 @@ import org.eclipse.xtend.lib.annotations.Data
 		return if(amount > 0) PositionType.LONG else PositionType.SHORT
 	}
 	
+	override getMaxDrawdown() {
+	}
+	
+	override getMaxDrawup() {
+	}
+	
 }

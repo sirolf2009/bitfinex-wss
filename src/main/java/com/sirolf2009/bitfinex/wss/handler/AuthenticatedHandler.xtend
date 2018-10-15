@@ -113,7 +113,7 @@ import java.util.Optional
 		//22 reserved
 		val notify = get(23).asInt == 1
 		val hidden = get(24).asInt == 1
-		val placedID = get(25).asInt
+		val placedID = get(25).asOptInt
 		return new UserOrder(orderID, groupID, clientID, pair, created, updated, amount, originalAmount, orderType, prevOrderType, flags, orderStatus, price, priceAvg, priceTrailing, priceAuxLimit, notify, hidden, placedID)
 	}
 	
