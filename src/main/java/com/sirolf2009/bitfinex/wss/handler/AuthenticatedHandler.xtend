@@ -84,7 +84,8 @@ import java.util.Optional
 		val basePrice = get(3).asFloat
 		val marginFunding = get(4).asFloat
 		val marginFundingType = if(get(5).isJsonNull() || get(5).asInt == 0) FundingType.DAILY else FundingType.TERM
-		return new Position(channel, pair, status, amount, basePrice, marginFunding, marginFundingType)
+		val pl = if(!get(6).isJsonNull()) get(6).asFloat else null
+		return new Position(channel, pair, status, amount, basePrice, marginFunding, marginFundingType, pl)
 	}
 
 	def parseOrder(JsonArray it, long channel) {

@@ -14,6 +14,7 @@ import org.eclipse.xtend.lib.annotations.Data
 	val float basePrice
 	val float marginFunding
 	val FundingType fundingType
+	val Float pl
 	
 	override getEntry() {
 		return new com.sirolf2009.commonwealth.trading.Trade(new Point(-1, basePrice), Math.abs(amount))
