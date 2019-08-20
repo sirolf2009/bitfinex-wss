@@ -25,9 +25,11 @@ import java.util.HashMap
 import java.util.Map
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
+import org.apache.logging.log4j.LogManager
 
 class BitfinexWebsocketClient extends WebSocketClient {
 
+	static val log = LogManager.getLogger()
 	val Gson gson
 	val Map<Long, EventBus> channels
 	val EventBus eventBus
@@ -40,11 +42,15 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	}
 
 	def send(Object object) {
-		send(gson.toJson(object))
+		val payload = gson.toJson(object)
+		log.trace("Sending {}", payload)
+		send(payload)
 	}
 
 	def send(int channel, String type, Object object) {
-		send('''[ «channel», "«type»", null, «gson.toJson(object)»]'''.toString())
+		val payload = '''[ «channel», "«type»", null, «gson.toJson(object)»]'''.toString()
+		log.trace("Sending {}", payload)
+		send(payload)
 	}
 	
 	def getEventBus() {
@@ -60,6 +66,7 @@ class BitfinexWebsocketClient extends WebSocketClient {
 	}
 
 	override onMessage(String message) {
+		log.trace("Received {}", message)
 		try {
 			if(message.startsWith("{")) {
 				val object = gson.fromJson(message, JsonObject)

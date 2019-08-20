@@ -17,11 +17,11 @@ import org.eclipse.xtend.lib.annotations.Data
 	val Float pl
 	
 	override getEntry() {
-		return new com.sirolf2009.commonwealth.trading.Trade(new Point(-1, basePrice), Math.abs(amount))
+		return new com.sirolf2009.commonwealth.trading.Trade(new Point(-1, basePrice), amount)
 	}
 	
 	override getExit() {
-		return new com.sirolf2009.commonwealth.trading.Trade(new Point(System.currentTimeMillis(), basePrice), Math.abs(amount))
+		return new com.sirolf2009.commonwealth.trading.Trade(new Point(System.currentTimeMillis(), basePrice), amount)
 	}
 	
 	override getEntryFee() {

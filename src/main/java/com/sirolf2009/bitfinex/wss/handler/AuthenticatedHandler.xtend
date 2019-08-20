@@ -181,7 +181,7 @@ import java.util.Optional
 
 	static val walletTypes = #{
 		"exchange" -> WalletType.EXCHANGE,
-		"trading" -> WalletType.TRADING,
+		"margin" -> WalletType.MARGIN,
 		"deposit" -> WalletType.DEPOSIT
 	}
 
